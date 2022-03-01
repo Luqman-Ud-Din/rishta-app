@@ -5,10 +5,14 @@ from rest_framework import serializers
 from backend.users.models import User
 
 
-class UserDetailSerializer(serializers.ModelSerializer):
+class UserBasicSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'password']
+        fields = [
+            'id', 'username', 'email',
+            'first_name', 'last_name', 'password',
+            'gender', 'religion', 'blood_group'
+        ]
         extra_kwargs = {
             'password': {'write_only': True},
             'id': {'read_only': True}
@@ -18,12 +22,28 @@ class UserDetailSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         if 'password' in validated_data:
             validated_data['password'] = make_password(validated_data['password'])
-        instance = super(UserDetailSerializer, self).create(validated_data)
-        return instance
+        return super(UserBasicSerializer, self).create(validated_data)
 
     @transaction.atomic
     def update(self, instance, validated_data):
         if 'password' in validated_data:
             validated_data['password'] = make_password(validated_data['password'])
-        instance = super(UserDetailSerializer, self).update(instance, validated_data)
-        return instance
+
+        if 'avatar' in validated_data and not validated_data['avatar']:
+            del validated_data['avatar']
+
+        return super(UserBasicSerializer, self).update(instance, validated_data)
+
+
+class UserDetailSerializer(UserBasicSerializer):
+    class Meta:
+        model = User
+        exclude = [
+            'user_permissions', 'groups', 'created_at',
+            'updated_at', 'date_joined', 'is_active',
+            'is_staff', 'is_superuser', 'last_login',
+        ]
+        extra_kwargs = {
+            'password': {'write_only': True, 'required': False},
+            'id': {'read_only': True}
+        }

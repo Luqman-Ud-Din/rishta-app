@@ -10,7 +10,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
 from backend.users.models import User
-from backend.users.serializers import UserDetailSerializer
+from backend.users.serializers import UserDetailSerializer, UserBasicSerializer
 from backend.users.tokens import account_activation_token
 
 
@@ -26,6 +26,9 @@ class UserAPIViewSet(ModelViewSet):
     permission_classes = (IsAuthenticated, IsAdminUser | IsOwner)
     serializer_class = UserDetailSerializer
     queryset = User.objects.all()
+
+    def get_serializer_class(self):
+        return UserBasicSerializer if self.action == 'list' else super(UserAPIViewSet, self).get_serializer_class()
 
     def is_create_api(self):
         return self.action == 'create'

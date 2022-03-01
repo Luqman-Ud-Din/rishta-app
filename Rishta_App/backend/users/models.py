@@ -9,7 +9,64 @@ from django.utils.translation import gettext_lazy as _
 from backend.users.managers import CustomUserManager
 
 
+def current_date():
+    return timezone.now().date()
+
+
+def current_time():
+    return timezone.now().time()
+
+
 class User(AbstractBaseUser, PermissionsMixin):
+    class Meta:
+        verbose_name = _('user')
+        verbose_name_plural = _('users')
+
+    class Gender(models.TextChoices):
+        MALE = 'M', _('Male')
+        FEMALE = 'F', _('Female')
+        UNKNOWN = 'U', _('Unknown')
+
+    class MaritalStatus(models.TextChoices):
+        SINGLE = 'S', _('Single')
+        MARRIED = 'M', _('Married')
+        DIVORCED = 'D', _('Divorced')
+        OTHER = 'O', _('Other')
+
+    class BloodGroup(models.TextChoices):
+        AB_NEGATIVE = 'AB-', _('AB-')
+        AB_POSITIVE = 'AB+', _('AB+')
+        A_NEGATIVE = 'A-', _('A-')
+        A_POSITIVE = 'A+', _('A+')
+        B_NEGATIVE = 'B-', _('B-')
+        B_POSITIVE = 'B+', _('B+')
+        O_NEGATIVE = 'O-', _('O-')
+        O_POSITIVE = 'O+', _('O+')
+        UNKNOWN = 'U', _('Unknown')
+
+    class CreatedBy(models.TextChoices):
+        SELF = 'SELF', _('Self')
+        PARENT = 'PARENT', _('Parent')
+        GUARDIAN = 'GUARDIAN', _('Guardian')
+        SIBLING = 'SIBLING', _('Sibling')
+        FRIEND = 'FRIEND', _('Friend')
+        OTHER = 'OTHER', _('Other')
+
+    class Religion(models.TextChoices):
+        CHRISTIANITY = 'CHRISTIANITY', _('Christianity')
+        ISLAM = 'ISLAM', _('Islam')
+        ATHEIST = 'ATHEIST', _('Atheist')
+        HINDUISM = 'HINDUISM', _('Hinduism')
+        BUDDHISM = 'BUDDHISM', _('Buddhism')
+        SIKHISM = 'SIKHISM', _('Sikhism')
+        SPIRITISM = 'SPIRITISM', _('Spiritism')
+        JUDAISM = 'JUDAISM', _('Judaism')
+        OTHER = 'OTHER', _('Other')
+
+    EMAIL_FIELD = 'email'
+    USERNAME_FIELD = 'username'
+    REQUIRED_FIELDS = ['email']
+
     objects = CustomUserManager()
     username_validator = UnicodeUsernameValidator()
 
@@ -39,15 +96,146 @@ class User(AbstractBaseUser, PermissionsMixin):
             'Unselect this instead of deleting accounts.'
         ),
     )
-    date_joined = models.DateTimeField(_('date joined'), default=timezone.now)
+    date_joined = models.DateTimeField(
+        _('date joined'),
+        default=timezone.now
+    )
 
-    EMAIL_FIELD = 'email'
-    USERNAME_FIELD = 'username'
-    REQUIRED_FIELDS = ['email']
+    date_of_birth = models.DateField(
+        _('date of birth'),
+        default=current_date
+    )
+    time_of_birth = models.TimeField(
+        _('time of birth'),
+        default=current_time
+    )
+    city_of_birth = models.CharField(
+        _('city of birth'),
+        max_length=64,
+        null=True,
+        blank=True
+    )
+    country = models.CharField(
+        _('country'),
+        max_length=64,
+        null=True,
+        blank=True
+    )
+    city = models.CharField(
+        _('city'),
+        max_length=64,
+        null=True,
+        blank=True
+    )
+    zip_code = models.CharField(
+        _('zip code'),
+        max_length=32,
+        null=True,
+        blank=True
+    )
+    residency_status = models.CharField(
+        _('residency status'),
+        max_length=64,
+        null=True,
+        blank=True
+    )
+    highest_qualification = models.CharField(
+        _('highest qualification'),
+        max_length=64,
+        null=True,
+        blank=True
+    )
+    employer = models.CharField(
+        _('employer'),
+        max_length=128,
+        null=True,
+        blank=True
+    )
+    annual_income = models.IntegerField(
+        _('annual income'),
+        default=0
+    )
+    religion = models.CharField(
+        _('religion'),
+        max_length=32,
+        choices=Religion.choices,
+        default=Religion.OTHER,
+    )
+    mother_tongue = models.CharField(
+        _('mother tongue'),
+        max_length=64,
+        null=True,
+        blank=True
+    )
+    community = models.CharField(
+        _('community'),
+        max_length=64,
+        null=True,
+        blank=True
+    )
+    sub_community = models.CharField(
+        _('sub-community'),
+        max_length=64,
+        null=True,
+        blank=True
+    )
+    gender = models.CharField(
+        _('gender'),
+        max_length=1,
+        choices=Gender.choices,
+        default=Gender.UNKNOWN,
+    )
+    marital_status = models.CharField(
+        _('marital status'),
+        max_length=1,
+        choices=MaritalStatus.choices,
+        default=MaritalStatus.SINGLE,
+    )
+    blood_group = models.CharField(
+        _('blood group'),
+        max_length=3,
+        choices=BloodGroup.choices,
+        default=BloodGroup.UNKNOWN,
+    )
+    created_by = models.CharField(
+        _('created by'),
+        max_length=8,
+        choices=CreatedBy.choices,
+        default=CreatedBy.SELF,
+    )
+    height = models.PositiveSmallIntegerField(
+        _('height'),
+        default=0,
+        help_text='height in centimeters'
+    )
+    has_disability = models.BooleanField(
+        _('has disability'),
+        default=False
+    )
+    is_father_alive = models.BooleanField(
+        _('is father alive'),
+        default=True
+    )
+    is_mother_alive = models.BooleanField(
+        _('is mother alive'),
+        default=True
+    )
+    children_count = models.PositiveSmallIntegerField(
+        _('children count'),
+        default=0
+    )
+    brothers_count = models.PositiveSmallIntegerField(
+        _('brothers count'),
+        default=0
+    )
+    sisters_count = models.PositiveSmallIntegerField(
+        _('sisters count'),
+        default=0
+    )
+    avatar = models.ImageField(upload_to='avatar', null=True, blank=True)
 
-    class Meta:
-        verbose_name = _('user')
-        verbose_name_plural = _('users')
+    created_at = models.DateTimeField(_('created at'), default=timezone.now)
+    updated_at = models.DateTimeField(_('updated at'), auto_now=True)
 
     def clean(self):
         super().clean()
