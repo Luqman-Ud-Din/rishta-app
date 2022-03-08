@@ -83,6 +83,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     first_name = models.CharField(_('first name'), max_length=150, blank=True)
     last_name = models.CharField(_('last name'), max_length=150, blank=True)
     email = models.EmailField(_('email address'), unique=True)
+    contact_number = models.CharField(_('contact number'), max_length=16, blank=True)
     is_staff = models.BooleanField(
         _('staff status'),
         default=False,
@@ -141,11 +142,17 @@ class User(AbstractBaseUser, PermissionsMixin):
     )
     highest_qualification = models.CharField(
         _('highest qualification'),
-        max_length=64,
+        max_length=128,
         null=True,
         blank=True
     )
     employer = models.CharField(
+        _('employer'),
+        max_length=128,
+        null=True,
+        blank=True
+    )
+    designation = models.CharField(
         _('employer'),
         max_length=128,
         null=True,
@@ -233,6 +240,13 @@ class User(AbstractBaseUser, PermissionsMixin):
         default=0
     )
     avatar = models.ImageField(upload_to='avatar', null=True, blank=True)
+
+    about_self = models.CharField(_('about self'), max_length=2048, null=True, blank=True)
+    about_family = models.CharField(_('about family'), max_length=2048, null=True, blank=True)
+    about_partner = models.CharField(_('about partner'), max_length=2048, null=True, blank=True)
+    about_likes = models.CharField(_('about likes'), max_length=1024, null=True, blank=True)
+    about_dislikes = models.CharField(_('about dislikes'), max_length=1024, null=True, blank=True)
+    about_lifestyle = models.CharField(_('about lifestyle'), max_length=1024, null=True, blank=True)
 
     created_at = models.DateTimeField(_('created at'), default=timezone.now)
     updated_at = models.DateTimeField(_('updated at'), auto_now=True)
