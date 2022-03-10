@@ -46,6 +46,7 @@ THIRD_PARTY_APPS = [
 LOCAL_APPS = [
     'backend',
     'backend.users',
+    'backend.events',
     'backend.swagger',
 ]
 
