@@ -12,6 +12,10 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 import os
 from pathlib import Path
 
+import enchant
+
+enchant.dict_exists('en')
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -41,6 +45,7 @@ THIRD_PARTY_APPS = [
     'drf_spectacular',
     'drf_spectacular_sidecar',
     'rest_framework_simplejwt',
+    'tinymce',
 ]
 
 LOCAL_APPS = [
@@ -160,4 +165,32 @@ SPECTACULAR_SETTINGS = {
     'SWAGGER_UI_DIST': 'SIDECAR',
     'SWAGGER_UI_FAVICON_HREF': 'SIDECAR',
     'REDOC_DIST': 'SIDECAR',
+}
+
+TINYMCE_JS_ROOT = os.path.join(STATIC_ROOT, "tiny_mce")
+TINYMCE_SPELLCHECKER = True
+TINYMCE_DEFAULT_CONFIG = {
+    'cleanup_on_startup': True,
+    'custom_undo_redo_levels': 20,
+    'selector': 'textarea',
+    'theme': 'silver',
+    'plugins': '''
+            advlist charmap colorpicker emoticons help imagetools legacyoutput media pagebreak print 
+            searchreplace table textpattern visualchars anchor code contextmenu fullpage hr importcss link nonbreaking 
+            paste quickbars spellchecker template toc wordcount autolink bbcode codesample directionality fullscreen 
+            image insertdatetime lists noneditable preview save tabfocus textcolor visualblocks
+            ''',
+    'toolbar1': '''
+            fullscreen preview bold italic underline | fontselect|
+            fontsizeselect  | forecolor backcolor | alignleft alignright |
+            aligncenter alignjustify | indent outdent | bullist numlist table |
+            | link image media | codesample |
+            ''',
+    'toolbar2': '''
+            visualblocks visualchars |
+            charmap hr pagebreak nonbreaking anchor |  code | emoticons |
+            ''',
+    'contextmenu': 'formats | link image',
+    'menubar': True,
+    'statusbar': True,
 }

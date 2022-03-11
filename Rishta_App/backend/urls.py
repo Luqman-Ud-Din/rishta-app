@@ -22,8 +22,6 @@ from rest_framework_simplejwt import views as jwt_views
 from backend.swagger.urls import urlpatterns as swagger_urls
 from backend.users.urls import urlpatterns as user_urls
 
-from rest_framework.schemas import get_schema_view
-
 # urlpatterns = [
 #     # ...
 #     # Use the `get_schema_view()` helper to add a `SchemaView` to project URLs.
@@ -40,6 +38,7 @@ urlpatterns = static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 urlpatterns += [
     path('admin/', admin.site.urls),
     path('swagger/', include(swagger_urls)),
+    path('tinymce/', include('tinymce.urls')),
     path('api/token/', jwt_views.TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', jwt_views.TokenRefreshView.as_view(), name='token_refresh'),
     path('api/users/', include(user_urls))
