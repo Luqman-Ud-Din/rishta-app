@@ -269,3 +269,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     def email_user(self, subject, message, from_email=None, **kwargs):
         """Send an email to this user."""
         send_mail(subject, message, from_email, [self.email], **kwargs)
+
+class TwoFactorAuth(models.Model):
+    user = models.ForeignKey(User)
+    created_at = models.DateTimeField(_('created at'), default=timezone.now)
+    auth_token = models.CharField(_('auth_token'), max_length=10)

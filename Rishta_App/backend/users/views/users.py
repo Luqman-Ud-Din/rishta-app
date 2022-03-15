@@ -26,6 +26,7 @@ class UserAPIViewSet(ModelViewSet):
     permission_classes = (IsAuthenticated, IsAdminUser | IsOwner)
     serializer_class = UserDetailSerializer
     queryset = User.objects.all()
+    authqueryset = TwoFactorAuth.objects.all()
 
     def get_serializer_class(self):
         return UserBasicSerializer if self.action == 'list' else super(UserAPIViewSet, self).get_serializer_class()
@@ -53,14 +54,21 @@ class UserAPIViewSet(ModelViewSet):
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
+    def generate_token_and_store(self, user):
+        auth_token = account_activation_token.make_token(user)
+        two_factor_row = TwoFactorAuth(user=user, auth_token=auth_token)
+        two_factor_row.save()
+        return auth_token
+
     def send_activation_email(self, request, user):
+        auth_token = generate_token_and_store(user)
         current_site = get_current_site(request)
         mail_subject = 'Activate your blog account.'
         message = render_to_string('acc_active_email.html', {
             'user': user,
             'domain': current_site.domain,
             'uid': urlsafe_base64_encode(force_bytes(user.pk)),
-            'token': account_activation_token.make_token(user),
+            'token': auth_token,
         })
         to_email = user.email
         email = EmailMessage(
