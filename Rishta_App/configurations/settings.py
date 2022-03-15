@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.0/ref/settings/
 """
 import os
+from datetime import timedelta
 from pathlib import Path
 
 import enchant
@@ -157,6 +158,11 @@ EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_HOST_USER = 'rishta.app.manager@gmail.com'
 EMAIL_HOST_PASSWORD = 'gjfctcfcdhouujih'
 EMAIL_PORT = 587
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=2),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+}
 
 SPECTACULAR_SETTINGS = {
     'TITLE': 'Matrimony API',

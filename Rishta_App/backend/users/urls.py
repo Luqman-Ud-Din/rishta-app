@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import re_path
 from rest_framework.routers import DefaultRouter
 
 from backend.users.views.activate_account import activate
@@ -8,7 +8,7 @@ router = DefaultRouter()
 router.register(r'', UserAPIViewSet, basename='user')
 
 urlpatterns = router.urls + [
-    path(
+    re_path(
         r'activate/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/?',
         activate,
         name='activate'
