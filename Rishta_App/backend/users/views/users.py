@@ -9,7 +9,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser, B
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
-from backend.users.models import User
+from backend.users.models import User, TwoFactorAuth
 from backend.users.serializers import UserDetailSerializer, UserBasicSerializer
 from backend.users.tokens import account_activation_token
 
@@ -61,7 +61,7 @@ class UserAPIViewSet(ModelViewSet):
         return auth_token
 
     def send_activation_email(self, request, user):
-        auth_token = generate_token_and_store(user)
+        auth_token = self.generate_token_and_store(user)
         current_site = get_current_site(request)
         mail_subject = 'Activate your blog account.'
         message = render_to_string('acc_active_email.html', {

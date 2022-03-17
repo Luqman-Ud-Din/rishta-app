@@ -8,6 +8,7 @@ from django.utils.translation import gettext_lazy as _
 
 from backend.users.managers import CustomUserManager
 
+from configurations.settings import AUTH_TOKEN_EXPIRATION
 
 def current_date():
     return timezone.now().date()
@@ -91,7 +92,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     )
     is_active = models.BooleanField(
         _('active'),
-        default=True,
+        default=False,
         help_text=_(
             'Designates whether this user should be treated as active. '
             'Unselect this instead of deleting accounts.'
@@ -271,6 +272,8 @@ class User(AbstractBaseUser, PermissionsMixin):
         send_mail(subject, message, from_email, [self.email], **kwargs)
 
 class TwoFactorAuth(models.Model):
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(_('created at'), default=timezone.now)
+    expire_at = models.DateTimeField(_('expire at'), default=timezone.now() + timezone.timedelta(seconds=AUTH_TOKEN_EXPIRATION))
+
     auth_token = models.CharField(_('auth_token'), max_length=10)

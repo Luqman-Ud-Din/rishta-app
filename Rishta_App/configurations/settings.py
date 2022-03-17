@@ -200,3 +200,6 @@ TINYMCE_DEFAULT_CONFIG = {
     'menubar': True,
     'statusbar': True,
 }
+
+# This is the time(in seconds) after which the auth token will expire
+AUTH_TOKEN_EXPIRATION = 600
