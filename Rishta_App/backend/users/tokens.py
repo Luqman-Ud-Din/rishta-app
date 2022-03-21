@@ -9,5 +9,4 @@ class TokenGenerator(PasswordResetTokenGenerator):
                 str(user.is_active)
         )
 
-
 account_activation_token = TokenGenerator()

@@ -50,7 +50,9 @@ class UserAPIViewSet(ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = self.perform_create(serializer)
-        self.send_activation_email(request, user)
+        response = self.send_activation_email(request, user)
+        if response == 0:
+            print("`unable to send te email! Please try later.")
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
@@ -62,16 +64,17 @@ class UserAPIViewSet(ModelViewSet):
 
     def send_activation_email(self, request, user):
         auth_token = self.generate_token_and_store(user)
-        current_site = get_current_site(request)
         mail_subject = 'Activate your blog account.'
         message = render_to_string('acc_active_email.html', {
             'user': user,
-            'domain': current_site.domain,
-            'uid': urlsafe_base64_encode(force_bytes(user.pk)),
             'token': auth_token,
         })
         to_email = user.email
         email = EmailMessage(
             mail_subject, message, to=[to_email]
         )
-        email.send()
+        try:
+            email.send()
+            return 1
+        except:
+            return 0
