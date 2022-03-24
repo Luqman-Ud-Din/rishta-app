@@ -1,12 +1,10 @@
-from django.contrib.auth.tokens import PasswordResetTokenGenerator
-from datetime import datetime
+import string
+import random
 
 
-class TokenGenerator(PasswordResetTokenGenerator):
-    def _make_hash_value(self, user, timestamp=datetime.now()):
-        return (
-                str(user.pk) + str(timestamp) +
-                str(user.is_active)
-        )
+class TokenGenerator():
+    @staticmethod
+    def generate_token(size=4, chars=string.ascii_uppercase + string.digits):
+        return ''.join(random.choice(chars) for _ in range(size))
 
-account_activation_token = TokenGenerator()
+

@@ -11,7 +11,7 @@ from rest_framework.viewsets import ModelViewSet
 
 from backend.users.models import User, TwoFactorAuth
 from backend.users.serializers import UserDetailSerializer, UserBasicSerializer
-from backend.users.tokens import account_activation_token
+from backend.users.tokens import TokenGenerator
 
 
 class IsOwner(BasePermission):
@@ -57,7 +57,7 @@ class UserAPIViewSet(ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def generate_token_and_store(self, user):
-        auth_token = account_activation_token.make_token(user)
+        auth_token = TokenGenerator.generate_token()
         two_factor_row = TwoFactorAuth(user=user, auth_token=auth_token)
         two_factor_row.save()
         return auth_token
