@@ -13,6 +13,7 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+import imp
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
@@ -21,6 +22,7 @@ from rest_framework_simplejwt import views as jwt_views
 
 from backend.swagger.urls import urlpatterns as swagger_urls
 from backend.users.urls import urlpatterns as user_urls
+from backend.events.urls import urlpatterns as event_urls
 
 # urlpatterns = [
 #     # ...
@@ -41,5 +43,6 @@ urlpatterns += [
     path('tinymce/', include('tinymce.urls')),
     path('api/token/', jwt_views.TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', jwt_views.TokenRefreshView.as_view(), name='token_refresh'),
-    path('api/users/', include(user_urls))
+    path('api/users/', include(user_urls)),
+    path('api/events/', include(event_urls))
 ]
