@@ -13,6 +13,6 @@ class EventsAPIViewSet(viewsets.ViewSet):
 
     def retrieve(self, request, pk=None):
         queryset = Event.objects.all()
-        user = get_object_or_404(queryset, id=pk)
-        serializer = EventDetailSerializer(user)
+        event = get_object_or_404(queryset, id=pk)
+        serializer = EventDetailSerializer(event)
         return Response(serializer.data)
