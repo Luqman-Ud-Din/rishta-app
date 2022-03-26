@@ -14,7 +14,9 @@ def activate(request, uidb64, token):
         user = Users.objects.get(pk=uid)
     except(TypeError, ValueError, OverflowError, User.DoesNotExist):
         user = None
-    
+    if user.is_active:
+        return HttpResponse('your account is already active plese login to your account.')
+
     authqueryset = TwoFactorAuth.objects.all()
     fetch_auth = authqueryset.filter(user_id=user.id, auth_token=token)
     
