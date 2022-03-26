@@ -9,7 +9,7 @@ router.register(r'', UserAPIViewSet, basename='user')
 
 urlpatterns = router.urls + [
     re_path(
-        r'activate',
+        r'activate/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[a-zA-Z0-9]{4})/?',
         activate,
         name='activate'
     ),

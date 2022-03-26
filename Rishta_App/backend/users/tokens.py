@@ -12,5 +12,3 @@ class TokenGenerator():
         digits_collection = [random.choice(numbers) for _ in range(total_digits)]
 
         return ''.join(chars_collection + digits_collection)
-
-

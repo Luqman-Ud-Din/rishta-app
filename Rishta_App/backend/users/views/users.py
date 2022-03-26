@@ -63,11 +63,15 @@ class UserAPIViewSet(ModelViewSet):
         return auth_token
 
     def send_activation_email(self, request, user):
+        current_site = get_current_site(request)
         auth_token = self.generate_token_and_store(user)
         mail_subject = 'Activate your blog account.'
+        activation_url = f'{current_site.domain}/{urlsafe_base64_encode(force_bytes(user.pk))}/{auth_token}'
         message = render_to_string('acc_active_email.html', {
             'user': user,
-            'token': auth_token,
+            'domain': current_site.domain,
+            'uid': urlsafe_base64_encode(force_bytes(user.pk)),
+            'token': auth_token
         })
         to_email = user.email
         email = EmailMessage(
