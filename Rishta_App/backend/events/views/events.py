@@ -8,7 +8,7 @@ from backend.events.serializers import EventDetailSerializer
 
 
 class EventsAPIViewSet(ModelViewSet):
-    # permission_classes = (IsAuthenticated, IsAdminUser)
+    permission_classes = (IsAuthenticated, IsAdminUser)
     serializer_class = EventDetailSerializer
     queryset = Event.objects.all()
 
@@ -24,7 +24,7 @@ class EventsAPIViewSet(ModelViewSet):
         if not queryset:
             return Response([])
 
-        serializer = EventDetailSerializer(queryset.order_by('-created_at'), many=True)
+        serializer = EventDetailSerializer(queryset.order_by('start_date'), many=True)
         return Response(serializer.data) 
 
     def retrieve(self, request, pk=None):
