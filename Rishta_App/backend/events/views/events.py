@@ -3,12 +3,10 @@ from backend.events.models import Event
 from django.shortcuts import get_object_or_404
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, IsAdminUser, BasePermission
 from backend.events.serializers import EventDetailSerializer
 
 
 class EventsAPIViewSet(ModelViewSet):
-    permission_classes = (IsAuthenticated, IsAdminUser)
     serializer_class = EventDetailSerializer
     queryset = Event.objects.all()
 
