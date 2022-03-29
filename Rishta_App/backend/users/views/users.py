@@ -4,11 +4,15 @@ from django.http import QueryDict
 from django.template.loader import render_to_string
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
+from drf_spectacular.utils import extend_schema
 from rest_framework import status
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser, BasePermission
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
+from backend.events.models import Event
+from backend.events.serializers import EventDetailSerializer
 from backend.users.models import User
 from backend.users.serializers import UserDetailSerializer, UserBasicSerializer
 from backend.users.tokens import account_activation_token
@@ -67,3 +71,16 @@ class UserAPIViewSet(ModelViewSet):
             mail_subject, message, to=[to_email]
         )
         email.send()
+
+    @extend_schema(responses=EventDetailSerializer(many=True))
+    @action(detail=True, methods=['get'], url_path='events')
+    def get_events(self, request, *ars, **kwargs):
+        user = self.get_object()
+        events = Event.objects.filter(user_events__user=user).order_by('-end_date')
+        page = self.paginate_queryset(events)
+        if page is not None:
+            serializer = EventDetailSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = EventDetailSerializer(events, many=True)
+        return Response(serializer.data)
