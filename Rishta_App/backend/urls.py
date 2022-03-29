@@ -42,6 +42,6 @@ urlpatterns += [
     path('tinymce/', include('tinymce.urls')),
     path('api/token/', jwt_views.TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', jwt_views.TokenRefreshView.as_view(), name='token_refresh'),
-    path('api/users/', include(user_urls)),
-    path('api/events/', include(event_urls))
+    path('api/', include(user_urls)),
+    path('api/', include(event_urls))
 ]
