@@ -8,6 +8,9 @@ User = get_user_model()
 
 
 class Event(models.Model):
+    class Meta:
+        ordering = ['start_date']
+        
     title = models.CharField(_('title'), max_length=512)
     detail = HTMLField(_('detail'), null=True, blank=True)
     start_date = models.DateTimeField(_('start date'))
