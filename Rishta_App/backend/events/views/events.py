@@ -3,6 +3,7 @@ from django.db.models import Count, Q
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import ModelViewSet
 
 from backend.events.enum import EventStatus
@@ -28,6 +29,7 @@ extend_events_schema = extend_schema(
 
 
 class EventsAPIViewSet(ModelViewSet):
+    permission_classes = (IsAuthenticated,)
     serializer_class = EventDetailSerializer
 
     def get_object(self):
@@ -135,5 +137,6 @@ class EventsAPIViewSet(ModelViewSet):
 
 
 class UserEventsAPIViewSet(ModelViewSet):
+    permission_classes = (IsAuthenticated,)
     serializer_class = UserEventSerializer
     queryset = UserEvent.objects.all()
