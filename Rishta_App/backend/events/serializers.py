@@ -1,3 +1,5 @@
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from backend.events.models import Event, UserEvent
@@ -16,12 +18,15 @@ class EventDetailSerializer(serializers.ModelSerializer):
     not_attend_count = serializers.SerializerMethodField()
     ignore_count = serializers.SerializerMethodField()
 
+    @extend_schema_field(OpenApiTypes.INT)
     def get_attend_count(self, obj):
         return getattr(obj, 'attend_count', None)
 
+    @extend_schema_field(OpenApiTypes.INT)
     def get_not_attend_count(self, obj):
         return getattr(obj, 'not_attend_count', None)
 
+    @extend_schema_field(OpenApiTypes.INT)
     def get_ignore_count(self, obj):
         return getattr(obj, 'ignore_count', None)
 

@@ -4,12 +4,16 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from tinymce.models import HTMLField
 
+from backend.events.managers import EventQuerySet
+
 User = get_user_model()
 
 
 class Event(models.Model):
     class Meta:
         ordering = ['start_date']
+
+    objects = EventQuerySet.as_manager()
 
     title = models.CharField(_('title'), max_length=512)
     detail = HTMLField(_('detail'), null=True, blank=True)

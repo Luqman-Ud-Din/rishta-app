@@ -9,13 +9,14 @@ class UserBasicSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
-            'id', 'username', 'email',
+            'id', 'username', 'email', 'avatar',
             'first_name', 'last_name', 'password',
             'gender', 'religion', 'blood_group'
         ]
         extra_kwargs = {
             'password': {'write_only': True},
-            'id': {'read_only': True}
+            'id': {'read_only': True},
+            'avatar': {'read_only': True},
         }
 
     @transaction.atomic
