@@ -8,6 +8,8 @@ from django.utils.translation import gettext_lazy as _
 
 from backend.users.managers import CustomUserManager
 
+from configurations.settings import AUTH_TOKEN_EXPIRATION
+
 
 def current_date():
     return timezone.now().date()
@@ -269,3 +271,11 @@ class User(AbstractBaseUser, PermissionsMixin):
     def email_user(self, subject, message, from_email=None, **kwargs):
         """Send an email to this user."""
         send_mail(subject, message, from_email, [self.email], **kwargs)
+
+
+class OTP(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(_('created at'), default=timezone.now)
+    expire_at = models.DateTimeField(_('expire at'), default=timezone.now() + timezone.timedelta(seconds=AUTH_TOKEN_EXPIRATION))
+
+    otp_token = models.CharField(_('auth_token'), max_length=4)

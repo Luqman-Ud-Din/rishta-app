@@ -1,8 +1,15 @@
+from pickle import FALSE
+from django.core.mail import EmailMessage
+from django.template.loader import render_to_string
 from django.contrib.auth.hashers import make_password
+from django.contrib.auth.models import update_last_login
 from django.db import transaction
 from rest_framework import serializers
+from rest_framework_simplejwt import serializers as jwtSerilizer
+from rest_framework_simplejwt.settings import api_settings
 
-from backend.users.models import User
+from backend.users.tokens import OTP
+from backend.users.models import User, OTP as otp_model
 
 
 class UserBasicSerializer(serializers.ModelSerializer):
@@ -48,3 +55,44 @@ class UserDetailSerializer(UserBasicSerializer):
             'password': {'write_only': True, 'required': False},
             'id': {'read_only': True}
         }
+
+
+class CustomeTokenObtainPairSerializer(jwtSerilizer.TokenObtainSerializer):
+    @classmethod
+    def get_token(cls):
+        return OTP.generate_token()
+
+    def store_otp(self, attrs, otp):
+        otp_row = otp_model(user_id=attrs['userid'], otp_token=otp)
+        otp_row.save()
+        return True
+    
+    def send_otp_email(self, user, otp):
+        mail_subject = 'OTP for login!'
+        message = render_to_string('otp_email.html', {
+            'user': user,
+            'token': otp
+        })
+        to_email = user['email']
+        email = EmailMessage(
+            mail_subject, message, to=[to_email]
+        )
+        try:
+            email.send()
+            return True
+        except:
+            return False
+
+    def validate(self, attrs):
+        attrs['userid'] = 2
+        attrs['email'] = 'fahadshawal@gmail.com'
+        
+        super().validate(attrs)
+        otp = self.get_token()
+        self.store_otp(attrs, otp)
+        self.send_otp_email(attrs, otp)
+
+        if api_settings.UPDATE_LAST_LOGIN:
+            update_last_login(None, self.user)
+
+        return True
