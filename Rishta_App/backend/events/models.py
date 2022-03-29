@@ -10,7 +10,7 @@ User = get_user_model()
 class Event(models.Model):
     class Meta:
         ordering = ['start_date']
-        
+
     title = models.CharField(_('title'), max_length=512)
     detail = HTMLField(_('detail'), null=True, blank=True)
     start_date = models.DateTimeField(_('start date'))
@@ -27,3 +27,27 @@ class Event(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class UserEvent(models.Model):
+    class Meta:
+        unique_together = [['event', 'user']]
+
+    class InterestStatus(models.TextChoices):
+        ATTEND = 'A', _('Attend')
+        NOT_ATTEND = 'N', _('Not Attend')
+        IGNORE = 'I', _('Ignore')
+
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='user_events')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_events')
+    interest_status = models.CharField(
+        _('interest status'),
+        max_length=1,
+        choices=InterestStatus.choices,
+        default=InterestStatus.IGNORE,
+    )
+    created_at = models.DateTimeField(_('created at'), default=timezone.now)
+    updated_at = models.DateTimeField(_('updated at'), auto_now=True)
+
+    def __str__(self):
+        return f'{self.event.id} | {self.interest_status} | {self.user}'
