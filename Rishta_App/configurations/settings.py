@@ -52,6 +52,7 @@ THIRD_PARTY_APPS = [
 LOCAL_APPS = [
     'backend',
     'backend.users',
+    'backend.authentication',
     'backend.events',
     'backend.swagger',
 ]
@@ -163,6 +164,8 @@ SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=2),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
 }
+OTP_EXPIRES_AFTER = 300
+OTP_LENGTH = 6
 
 SPECTACULAR_SETTINGS = {
     'TITLE': 'Matrimony API',
