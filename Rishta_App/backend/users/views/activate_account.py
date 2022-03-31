@@ -14,9 +14,13 @@ def activate(request, uidb64, token):
     except(TypeError, ValueError, OverflowError, User.DoesNotExist):
         user = None
 
-    if user is not None and account_activation_token.check_token(user, token):
-        user.is_active = True
-        user.save()
-        return HttpResponse('Thank you for your email confirmation. Now you can login your account.')
-    else:
+    if not user:
         return HttpResponse('Activation link is invalid!')
+    elif user.is_active:
+        return HttpResponse('The account is already active. Please login your account.')
+    elif not account_activation_token.check_token(user, token):
+        return HttpResponse('Activation link is invalid!')
+
+    user.is_active = True
+    user.save()
+    return HttpResponse('Thank you for your email confirmation. Now you can login your account.')

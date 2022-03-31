@@ -11,7 +11,7 @@ router.register(APP_BASE_URL, UserAPIViewSet, basename='user')
 
 urlpatterns = router.urls + [
     re_path(
-        APP_BASE_URL + r'/activate/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/?',
+        APP_BASE_URL + r'/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]+-[0-9A-Za-z]+)/activate/?',
         activate,
         name='activate'
     ),

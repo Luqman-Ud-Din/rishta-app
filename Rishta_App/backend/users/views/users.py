@@ -128,7 +128,7 @@ class UserAPIViewSet(ModelViewSet):
 
     def send_activation_email(self, request, user):
         current_site = get_current_site(request)
-        mail_subject = 'Activate your blog account.'
+        mail_subject = 'Matrimony Account Activation Link.'
         message = render_to_string('acc_active_email.html', {
             'user': user,
             'domain': current_site.domain,
