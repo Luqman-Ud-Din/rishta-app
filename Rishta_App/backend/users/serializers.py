@@ -40,11 +40,12 @@ class UserDetailSerializer(UserBasicSerializer):
     class Meta:
         model = User
         exclude = [
-            'user_permissions', 'groups', 'created_at',
-            'updated_at', 'date_joined', 'is_active',
+            'user_permissions', 'groups',
+            'created_at', 'updated_at', 'date_joined',
             'is_staff', 'is_superuser', 'last_login',
         ]
         extra_kwargs = {
             'password': {'write_only': True, 'required': False},
-            'id': {'read_only': True}
+            'id': {'read_only': True},
+            'is_active': {'write_only': True, 'required': False}
         }
