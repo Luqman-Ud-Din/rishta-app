@@ -269,3 +269,24 @@ class User(AbstractBaseUser, PermissionsMixin):
     def email_user(self, subject, message, from_email=None, **kwargs):
         """Send an email to this user."""
         send_mail(subject, message, from_email, [self.email], **kwargs)
+
+
+class Sentiment(models.Model):
+    class Meta:
+        unique_together = ['sentiment_to', 'sentiment_from']
+
+    class SentimentStatus(models.TextChoices):
+        LIKE = 'L', _('LIKE')
+        DISLIKE = 'D', _('DISLIKE')
+        NEUTRAL = 'N', _('NETURAL')
+
+    sentiment_to = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sentiments_to')
+    sentiment_from = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sentiments_from')
+    sentiment = models.CharField(
+        _('sentiment'),
+        max_length=1,
+        choices=SentimentStatus.choices,
+        default=SentimentStatus.NEUTRAL,
+    )
+    created_at = models.DateTimeField(_('created at'), default=timezone.now)
+    updated_at = models.DateTimeField(_('updated at'), auto_now=True)

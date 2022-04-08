@@ -1,8 +1,9 @@
+from wsgiref.validate import validator
 from django.contrib.auth.hashers import make_password
 from django.db import transaction
 from rest_framework import serializers
 
-from backend.users.models import User
+from backend.users.models import User, Sentiment
 
 
 class UserBasicSerializer(serializers.ModelSerializer):
@@ -22,13 +23,15 @@ class UserBasicSerializer(serializers.ModelSerializer):
     @transaction.atomic
     def create(self, validated_data):
         if 'password' in validated_data:
-            validated_data['password'] = make_password(validated_data['password'])
+            validated_data['password'] = make_password(
+                validated_data['password'])
         return super(UserBasicSerializer, self).create(validated_data)
 
     @transaction.atomic
     def update(self, instance, validated_data):
         if 'password' in validated_data:
-            validated_data['password'] = make_password(validated_data['password'])
+            validated_data['password'] = make_password(
+                validated_data['password'])
 
         if 'avatar' in validated_data and not validated_data['avatar']:
             del validated_data['avatar']
@@ -49,3 +52,32 @@ class UserDetailSerializer(UserBasicSerializer):
             'id': {'read_only': True},
             'is_active': {'write_only': True, 'required': False}
         }
+
+
+class UserSentimentSerializer(serializers.ModelSerializer):
+    class Meta:
+        validators = []
+        model = Sentiment
+        fields = '__all__'
+        extra_kwargs = {
+            'created_at': {'read_only': True},
+            'updated_at': {'read_only': True}
+        }
+
+    @transaction.atomic
+    def create(self, validated_data):
+        instance, __ = Sentiment.objects.get_or_create(
+            sentiment_to=validated_data['sentiment_to'], sentiment_from=validated_data['sentiment_from'])
+
+        instance.sentiment = validated_data['sentiment']
+        instance.save()
+        return instance
+
+
+# class UserSentimentSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = Sentiment
+#         fields = ['sentiment_for', 'sentiment_of', 'sentiment']
+
+#     # sentiment_for = serializers.ReadOnlyField()
+#     # sentiment_of = serializers.ReadOnlyField()

@@ -1,3 +1,4 @@
+from urllib import request
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.mail import EmailMessage
 from django.http import QueryDict
@@ -15,8 +16,8 @@ from rest_framework.viewsets import ModelViewSet
 from backend.events.enum import EventStatus
 from backend.events.models import Event, UserEvent
 from backend.events.serializers import EventDetailSerializer
-from backend.users.models import User
-from backend.users.serializers import UserDetailSerializer, UserBasicSerializer
+from backend.users.models import Sentiment, User
+from backend.users.serializers import UserDetailSerializer, UserBasicSerializer, UserSentimentSerializer
 from backend.users.tokens import account_activation_token
 
 
@@ -25,8 +26,10 @@ class IsOwner(BasePermission):
         return bool(request.user)
 
     def has_object_permission(self, request, view, obj):
-        return obj == request.user
-
+        if isinstance(obj, User):
+            return obj == request.user
+        if isinstance(obj, Sentiment):
+            return obj == request.sentiment_to
 
 event_status_query_parameter = OpenApiParameter(
     name='status', location=OpenApiParameter.QUERY,
@@ -57,10 +60,10 @@ class UserAPIViewSet(ModelViewSet):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
 
         assert lookup_url_kwarg in self.kwargs, (
-                'Expected view %s to be called with a URL keyword argument '
-                'named "%s". Fix your URL conf, or set the `.lookup_field` '
-                'attribute on the view correctly.' %
-                (self.__class__.__name__, lookup_url_kwarg)
+            'Expected view %s to be called with a URL keyword argument '
+            'named "%s". Fix your URL conf, or set the `.lookup_field` '
+            'attribute on the view correctly.' %
+            (self.__class__.__name__, lookup_url_kwarg)
         )
 
         filter_kwargs = {self.lookup_field: self.kwargs[lookup_url_kwarg]}
@@ -74,19 +77,26 @@ class UserAPIViewSet(ModelViewSet):
     def get_serializer_class(self):
         if self.action == 'get_events':
             return EventDetailSerializer
-        elif self.action == 'list':
+        elif self.action == 'list' or self.action == 'get_user_sentiments_from':
             return UserBasicSerializer
 
         return super(UserAPIViewSet, self).get_serializer_class()
 
     def get_queryset(self):
-        if self.action == 'get_events':
+        if self.action == 'get_user_sentiments_from':
+            return self.get_user_sentiments_from_queryset()
+        elif self.action == 'get_events':
             return self.get_user_events_queryset()
 
         return self.get_users_queryset()
 
     def get_users_queryset(self):
         return User.objects.all()
+
+    def get_user_sentiments_from_queryset(self):
+        queryset = User.objects.filter(
+            sentiments_to__sentiment_to=self.get_object())
+        return queryset
 
     def get_user_events_queryset(self):
         status = self.request.query_params.get('status')
@@ -156,3 +166,16 @@ class UserAPIViewSet(ModelViewSet):
     @action(detail=True, methods=['get'], url_path='events')
     def get_events(self, request, *args, **kwargs):
         return super(UserAPIViewSet, self).list(request, *args, **kwargs)
+
+    @action(detail=True, methods=['get'], url_path='sentiment_from')
+    def get_user_sentiments_from(self, request, *args, **kwargs):
+        return super(UserAPIViewSet, self).list(request, *args, **kwargs)
+
+
+class SentimentAPIViewSet(ModelViewSet):
+    permission_classes = (IsAuthenticated, IsAdminUser | IsOwner)
+    queryset = Sentiment.objects.all()
+    serializer_class = UserSentimentSerializer
+
+    def get_queryset(self):
+        pass
