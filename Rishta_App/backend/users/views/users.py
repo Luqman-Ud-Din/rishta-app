@@ -77,7 +77,7 @@ class UserAPIViewSet(ModelViewSet):
     def get_serializer_class(self):
         if self.action == 'get_events':
             return EventDetailSerializer
-        elif self.action == 'list' or self.action == 'get_user_sentiments_from':
+        elif self.action == 'list' or self.action == 'get_user_sentiments_from' or self.action == 'get_user_sentiments_to':
             return UserBasicSerializer
 
         return super(UserAPIViewSet, self).get_serializer_class()
@@ -85,6 +85,8 @@ class UserAPIViewSet(ModelViewSet):
     def get_queryset(self):
         if self.action == 'get_user_sentiments_from':
             return self.get_user_sentiments_from_queryset()
+        elif self.action == 'get_user_sentiments_to' :
+            return self.get_user_sentiments_to_queryset()
         elif self.action == 'get_events':
             return self.get_user_events_queryset()
 
@@ -96,6 +98,11 @@ class UserAPIViewSet(ModelViewSet):
     def get_user_sentiments_from_queryset(self):
         queryset = User.objects.filter(
             sentiments_to__sentiment_to=self.get_object())
+        return queryset
+
+    def get_user_sentiments_to_queryset(self):
+        queryset = User.objects.filter(
+            sentiments_from__sentiment_from=self.get_object())
         return queryset
 
     def get_user_events_queryset(self):
@@ -171,6 +178,9 @@ class UserAPIViewSet(ModelViewSet):
     def get_user_sentiments_from(self, request, *args, **kwargs):
         return super(UserAPIViewSet, self).list(request, *args, **kwargs)
 
+    @action(detail=True, methods=['get'], url_path='sentiment_to')
+    def get_user_sentiments_to(self, request, *args, **kwargs):
+        return super(UserAPIViewSet, self).list(request, *args, **kwargs)
 
 class SentimentAPIViewSet(ModelViewSet):
     permission_classes = (IsAuthenticated, IsAdminUser | IsOwner)
