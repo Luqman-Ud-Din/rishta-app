@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from django.db.models import Count, Q
+from django.db.models import Count, Q, OuterRef, Subquery, Case, When, Value, CharField, F
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
@@ -95,6 +95,23 @@ class EventsAPIViewSet(ModelViewSet):
             ignore_count=Count(
                 'user_events',
                 filter=Q(user_events__interest_status=UserEvent.InterestStatus.IGNORE)
+            ),
+            interest_status=Subquery(
+                UserEvent.objects.filter(
+                    event=OuterRef('id'),
+                    user=self.request.user
+                ).values('interest_status')[:1]
+            )
+        ).annotate(
+            interest_status=Case(
+                When(
+                    interest_status__isnull=True,
+                    then=Value(
+                        UserEvent.InterestStatus.IGNORE,
+                        output_field=CharField()
+                    ),
+                ),
+                default=F('interest_status')
             )
         ).order_by('-start_date')
 

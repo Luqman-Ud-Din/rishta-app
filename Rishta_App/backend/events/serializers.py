@@ -17,6 +17,7 @@ class EventDetailSerializer(serializers.ModelSerializer):
     attend_count = serializers.SerializerMethodField()
     not_attend_count = serializers.SerializerMethodField()
     ignore_count = serializers.SerializerMethodField()
+    interest_status = serializers.SerializerMethodField()
 
     @extend_schema_field(OpenApiTypes.INT)
     def get_attend_count(self, obj):
@@ -29,6 +30,10 @@ class EventDetailSerializer(serializers.ModelSerializer):
     @extend_schema_field(OpenApiTypes.INT)
     def get_ignore_count(self, obj):
         return getattr(obj, 'ignore_count', None)
+
+    @extend_schema_field(OpenApiTypes.STR)
+    def get_interest_status(self, obj):
+        return getattr(obj, 'interest_status', None)
 
 
 class UserEventSerializer(serializers.ModelSerializer):
