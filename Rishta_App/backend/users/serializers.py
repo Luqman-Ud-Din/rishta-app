@@ -1,19 +1,22 @@
-from wsgiref.validate import validator
 from django.contrib.auth.hashers import make_password
 from django.db import transaction
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from backend.users.models import User, Sentiment
+
+basic_user_fields = [
+    'id', 'username', 'email', 'avatar',
+    'first_name', 'last_name', 'password',
+    'gender', 'religion', 'blood_group'
+]
 
 
 class UserBasicSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = [
-            'id', 'username', 'email', 'avatar',
-            'first_name', 'last_name', 'password',
-            'gender', 'religion', 'blood_group'
-        ]
+        fields = basic_user_fields
         extra_kwargs = {
             'password': {'write_only': True},
             'id': {'read_only': True},
@@ -53,8 +56,36 @@ class UserDetailSerializer(UserBasicSerializer):
             'is_active': {'write_only': True, 'required': False}
         }
 
+    profile_likes = serializers.SerializerMethodField()
+    profile_dislikes = serializers.SerializerMethodField()
 
-class UserSentimentSerializer(serializers.ModelSerializer):
+    @extend_schema_field(OpenApiTypes.INT)
+    def get_profile_likes(self, obj):
+        return obj.sentiments_to.filter(sentiment=Sentiment.SentimentStatus.LIKE).count()
+
+    @extend_schema_field(OpenApiTypes.INT)
+    def get_profile_dislikes(self, obj):
+        return obj.sentiments_to.filter(sentiment=Sentiment.SentimentStatus.DISLIKE).count()
+
+
+class UserBasicSentimentSerializer(UserBasicSerializer):
+    class Meta:
+        model = User
+        fields = basic_user_fields + ['sentiment']
+        extra_kwargs = {
+            'password': {'write_only': True},
+            'id': {'read_only': True},
+            'avatar': {'read_only': True},
+        }
+
+    sentiment = serializers.SerializerMethodField()
+
+    @extend_schema_field(OpenApiTypes.STR)
+    def get_sentiment(self, obj):
+        return getattr(obj, 'sentiment', None)
+
+
+class SentimentSerializer(serializers.ModelSerializer):
     class Meta:
         validators = []
         model = Sentiment
@@ -72,12 +103,3 @@ class UserSentimentSerializer(serializers.ModelSerializer):
         instance.sentiment = validated_data['sentiment']
         instance.save()
         return instance
-
-
-# class UserSentimentSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Sentiment
-#         fields = ['sentiment_for', 'sentiment_of', 'sentiment']
-
-#     # sentiment_for = serializers.ReadOnlyField()
-#     # sentiment_of = serializers.ReadOnlyField()
