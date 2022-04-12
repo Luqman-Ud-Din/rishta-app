@@ -1,5 +1,6 @@
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.mail import EmailMessage
+from django.db.models import Subquery, OuterRef
 from django.http import QueryDict
 from django.template.loader import render_to_string
 from django.utils.encoding import force_bytes
@@ -8,15 +9,17 @@ from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
-from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser, BasePermission
+from rest_framework.permissions import IsAuthenticated, AllowAny, BasePermission
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
 from backend.events.enum import EventStatus
 from backend.events.models import Event, UserEvent
 from backend.events.serializers import EventDetailSerializer
-from backend.users.models import User
-from backend.users.serializers import UserDetailSerializer, UserBasicSerializer
+from backend.users.models import Sentiment, User
+from backend.users.serializers import (
+    UserDetailSerializer, UserBasicSerializer, UserBasicSentimentSerializer
+)
 from backend.users.tokens import account_activation_token
 
 
@@ -25,7 +28,8 @@ class IsOwner(BasePermission):
         return bool(request.user)
 
     def has_object_permission(self, request, view, obj):
-        return obj == request.user
+        if isinstance(obj, User):
+            return obj == request.user
 
 
 event_status_query_parameter = OpenApiParameter(
@@ -38,9 +42,26 @@ event_interest_query_parameter = OpenApiParameter(
     description='User Interest Status', required=False, type=str, enum=UserEvent.InterestStatus.values
 )
 
+extend_user_sentiment_schema = extend_schema(
+    responses=UserBasicSentimentSerializer(many=True),
+    parameters=[
+        OpenApiParameter(
+            name='id', location=OpenApiParameter.PATH,
+            description='A unique integer value identifying this user.',
+            required=True, type=int
+        ),
+        OpenApiParameter(
+            name='sentiment', location=OpenApiParameter.QUERY,
+            description='User Sentiment', required=False, type=str, enum=[
+                value for value in Sentiment.SentimentStatus.values if value != Sentiment.SentimentStatus.NEUTRAL
+            ]
+        )
+    ],
+)
+
 
 class UserAPIViewSet(ModelViewSet):
-    permission_classes = (IsAuthenticated, IsAdminUser | IsOwner)
+    permission_classes = (IsAuthenticated,)
     serializer_class = UserDetailSerializer
 
     def get_object(self):
@@ -76,17 +97,67 @@ class UserAPIViewSet(ModelViewSet):
             return EventDetailSerializer
         elif self.action == 'list':
             return UserBasicSerializer
+        elif self.action in ['get_user_sentiments_from', 'get_user_sentiments_to']:
+            return UserBasicSentimentSerializer
 
         return super(UserAPIViewSet, self).get_serializer_class()
 
     def get_queryset(self):
-        if self.action == 'get_events':
+        if self.action == 'get_user_sentiments_from':
+            return self.get_user_sentiments_from_queryset()
+        elif self.action == 'get_user_sentiments_to':
+            return self.get_user_sentiments_to_queryset()
+        elif self.action == 'get_events':
             return self.get_user_events_queryset()
 
         return self.get_users_queryset()
 
     def get_users_queryset(self):
         return User.objects.all()
+
+    def get_user_sentiments_from_queryset(self):
+        sentiment = self.request.query_params.get('sentiment')
+        user = self.get_object()
+
+        query = {
+            'sentiments_from__sentiment_to': user
+        }
+        if sentiment:
+            query['sentiments_from__sentiment'] = sentiment
+
+        queryset = User.objects.filter(
+            **query
+        ).annotate(
+            sentiment=Subquery(
+                Sentiment.objects.filter(
+                    sentiment_from=OuterRef('id'),
+                    sentiment_to=user
+                ).values('sentiment')[:1]
+            )
+        )
+        return queryset.exclude(sentiment=Sentiment.SentimentStatus.NEUTRAL)
+
+    def get_user_sentiments_to_queryset(self):
+        sentiment = self.request.query_params.get('sentiment')
+        user = self.get_object()
+
+        query = {
+            'sentiments_to__sentiment_from': user
+        }
+        if sentiment:
+            query['sentiments_to__sentiment'] = sentiment
+
+        queryset = User.objects.filter(
+            **query
+        ).annotate(
+            sentiment=Subquery(
+                Sentiment.objects.filter(
+                    sentiment_to=OuterRef('id'),
+                    sentiment_from=user
+                ).values('sentiment')[:1]
+            )
+        )
+        return queryset.exclude(sentiment=Sentiment.SentimentStatus.NEUTRAL)
 
     def get_user_events_queryset(self):
         status = self.request.query_params.get('status')
@@ -155,4 +226,14 @@ class UserAPIViewSet(ModelViewSet):
     )
     @action(detail=True, methods=['get'], url_path='events')
     def get_events(self, request, *args, **kwargs):
+        return super(UserAPIViewSet, self).list(request, *args, **kwargs)
+
+    @extend_user_sentiment_schema
+    @action(detail=True, methods=['get'], url_path='sentiment-from')
+    def get_user_sentiments_from(self, request, *args, **kwargs):
+        return super(UserAPIViewSet, self).list(request, *args, **kwargs)
+
+    @extend_user_sentiment_schema
+    @action(detail=True, methods=['get'], url_path='sentiment-to')
+    def get_user_sentiments_to(self, request, *args, **kwargs):
         return super(UserAPIViewSet, self).list(request, *args, **kwargs)
