@@ -278,7 +278,7 @@ class Sentiment(models.Model):
     class SentimentStatus(models.TextChoices):
         LIKE = 'L', _('LIKE')
         DISLIKE = 'D', _('DISLIKE')
-        NEUTRAL = 'N', _('NETURAL')
+        NEUTRAL = 'N', _('NEUTRAL')
 
     sentiment_to = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sentiments_to')
     sentiment_from = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sentiments_from')
