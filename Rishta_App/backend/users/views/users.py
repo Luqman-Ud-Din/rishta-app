@@ -1,4 +1,3 @@
-from urllib import request
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.mail import EmailMessage
 from django.http import QueryDict
@@ -31,6 +30,7 @@ class IsOwner(BasePermission):
         if isinstance(obj, Sentiment):
             return obj == request.sentiment_to
 
+
 event_status_query_parameter = OpenApiParameter(
     name='status', location=OpenApiParameter.QUERY,
     description='Event Status', required=False, type=str, enum=[es.value for es in EventStatus]
@@ -60,10 +60,10 @@ class UserAPIViewSet(ModelViewSet):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
 
         assert lookup_url_kwarg in self.kwargs, (
-            'Expected view %s to be called with a URL keyword argument '
-            'named "%s". Fix your URL conf, or set the `.lookup_field` '
-            'attribute on the view correctly.' %
-            (self.__class__.__name__, lookup_url_kwarg)
+                'Expected view %s to be called with a URL keyword argument '
+                'named "%s". Fix your URL conf, or set the `.lookup_field` '
+                'attribute on the view correctly.' %
+                (self.__class__.__name__, lookup_url_kwarg)
         )
 
         filter_kwargs = {self.lookup_field: self.kwargs[lookup_url_kwarg]}
@@ -85,7 +85,7 @@ class UserAPIViewSet(ModelViewSet):
     def get_queryset(self):
         if self.action == 'get_user_sentiments_from':
             return self.get_user_sentiments_from_queryset()
-        elif self.action == 'get_user_sentiments_to' :
+        elif self.action == 'get_user_sentiments_to':
             return self.get_user_sentiments_to_queryset()
         elif self.action == 'get_events':
             return self.get_user_events_queryset()
@@ -181,6 +181,7 @@ class UserAPIViewSet(ModelViewSet):
     @action(detail=True, methods=['get'], url_path='sentiment_to')
     def get_user_sentiments_to(self, request, *args, **kwargs):
         return super(UserAPIViewSet, self).list(request, *args, **kwargs)
+
 
 class SentimentAPIViewSet(ModelViewSet):
     permission_classes = (IsAuthenticated, IsAdminUser | IsOwner)
