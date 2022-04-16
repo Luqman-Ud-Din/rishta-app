@@ -4,7 +4,7 @@ from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
-from backend.users.models import User, Sentiment
+from backend.users.models import User, Sentiment, ProfileView
 
 basic_user_fields = [
     'id', 'username', 'email', 'avatar',
@@ -103,3 +103,10 @@ class SentimentSerializer(serializers.ModelSerializer):
         instance.sentiment = validated_data['sentiment']
         instance.save()
         return instance
+
+
+class ProfileViewSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ProfileView
+        fields = '__all__'

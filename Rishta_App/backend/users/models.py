@@ -290,3 +290,9 @@ class Sentiment(models.Model):
     )
     created_at = models.DateTimeField(_('created at'), default=timezone.now)
     updated_at = models.DateTimeField(_('updated at'), auto_now=True)
+
+
+class ProfileView(models.Model):
+    viewer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='viewer')
+    viewee = models.ForeignKey(User, on_delete=models.CASCADE, related_name='viewee')
+    created_at = models.DateTimeField(_('created at'), default=timezone.now)
