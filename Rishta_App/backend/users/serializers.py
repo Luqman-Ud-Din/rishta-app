@@ -60,6 +60,8 @@ class UserDetailSerializer(UserBasicSerializer):
 
     profile_likes = serializers.SerializerMethodField()
     profile_dislikes = serializers.SerializerMethodField()
+    profile_viewers = serializers.SerializerMethodField()
+    profile_views = serializers.SerializerMethodField()
 
     @extend_schema_field(OpenApiTypes.INT)
     def get_profile_likes(self, obj):
@@ -68,6 +70,16 @@ class UserDetailSerializer(UserBasicSerializer):
     @extend_schema_field(OpenApiTypes.INT)
     def get_profile_dislikes(self, obj):
         return obj.sentiments_to.filter(sentiment=Sentiment.SentimentStatus.DISLIKE).count()
+
+    @extend_schema_field(OpenApiTypes.INT)
+    def get_profile_viewers(self, obj):
+        # TODO: obj.viewee.all().distinct('viewer').count()
+        # TODO: after migrating to PostgreSQL
+        return User.objects.filter(viewer__viewee=obj).distinct().count()
+
+    @extend_schema_field(OpenApiTypes.INT)
+    def get_profile_views(self, obj):
+        return obj.viewee.all().count()
 
 
 class UserBasicSentimentSerializer(UserBasicSerializer):
