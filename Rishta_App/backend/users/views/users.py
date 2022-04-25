@@ -1,6 +1,6 @@
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.mail import EmailMessage
-from django.db.models import Subquery, OuterRef
+from django.db.models import Subquery, OuterRef, Count, Q
 from django.http import QueryDict
 from django.template.loader import render_to_string
 from django.utils.encoding import force_bytes
@@ -16,11 +16,12 @@ from rest_framework.viewsets import ModelViewSet
 from backend.events.enum import EventStatus
 from backend.events.models import Event, UserEvent
 from backend.events.serializers import EventDetailSerializer
-from backend.users.models import Sentiment, User
+from backend.users.models import Sentiment, User, ProfileView
 from backend.users.serializers import (
-    UserDetailSerializer, UserBasicSerializer, UserBasicSentimentSerializer
+    UserDetailSerializer, UserBasicSerializer, UserBasicSentimentSerializer, UserBasicProfileViewSerializer
 )
 from backend.users.tokens import account_activation_token
+from services.date_service import DateService
 
 
 class IsOwner(BasePermission):
@@ -55,6 +56,25 @@ extend_user_sentiment_schema = extend_schema(
             description='User Sentiment', required=False, type=str, enum=[
                 value for value in Sentiment.SentimentStatus.values if value != Sentiment.SentimentStatus.NEUTRAL
             ]
+        )
+    ],
+)
+
+extend_profile_views_schema = extend_schema(
+    responses=UserBasicProfileViewSerializer(many=True),
+    parameters=[
+        OpenApiParameter(
+            name='id', location=OpenApiParameter.PATH,
+            description='A unique integer value identifying this user.',
+            required=True, type=int
+        ),
+        OpenApiParameter(
+            name='start_date', location=OpenApiParameter.QUERY,
+            description='start date UTC unix timestamp', required=False, type=str
+        ),
+        OpenApiParameter(
+            name='end_date', location=OpenApiParameter.QUERY,
+            description='end date UTC unix timestamp', required=False, type=str
         )
     ],
 )
@@ -99,6 +119,8 @@ class UserAPIViewSet(ModelViewSet):
             return UserBasicSerializer
         elif self.action in ['get_user_sentiments_from', 'get_user_sentiments_to']:
             return UserBasicSentimentSerializer
+        elif self.action in ['get_profile_visited_by', 'get_profile_visited_to']:
+            return UserBasicProfileViewSerializer
 
         return super(UserAPIViewSet, self).get_serializer_class()
 
@@ -109,6 +131,10 @@ class UserAPIViewSet(ModelViewSet):
             return self.get_user_sentiments_to_queryset()
         elif self.action == 'get_events':
             return self.get_user_events_queryset()
+        elif self.action == 'get_profile_visited_by':
+            return self.get_profile_visited_by_queryset()
+        elif self.action == 'get_profile_visited_to':
+            return self.get_profile_visited_to_queryset()
 
         return self.get_users_queryset()
 
@@ -174,6 +200,82 @@ class UserAPIViewSet(ModelViewSet):
 
         return queryset.order_by('-end_date')
 
+    def get_profile_visited_by_queryset(self):
+        user = self.get_object()
+        start_date = self.request.query_params.get('start_date')
+        end_date = self.request.query_params.get('end_date')
+        queryset = User.objects.filter(
+            viewer__viewee=user
+        )
+        sub_queryset = ProfileView.objects.filter(viewee=user)
+        view_count_query = Q()
+
+        if start_date:
+            start_date = DateService.from_timestamp(start_date)
+            queryset = queryset.filter(viewer__created_at__gte=start_date)
+            sub_queryset = sub_queryset.filter(created_at__gte=start_date)
+            view_count_query = view_count_query & Q(viewee__created_at__gte=start_date)
+
+        if end_date:
+            end_date = DateService.from_timestamp(end_date)
+            queryset = queryset.filter(viewer__created_at__lte=end_date)
+            sub_queryset = sub_queryset.filter(created_at__lte=end_date)
+            view_count_query = view_count_query & Q(viewer__created_at__lte=end_date)
+
+        queryset = queryset.annotate(
+            view_count=Count(
+                'viewer',
+                filter=view_count_query
+            ),
+            last_viewed=Subquery(
+                sub_queryset.filter(
+                    viewer=OuterRef('id')
+                ).order_by('-created_at').values('created_at')[:1]
+            )
+        ).filter(
+            view_count__gt=0
+        ).distinct()
+
+        return queryset.order_by('-last_viewed')
+
+    def get_profile_visited_to_queryset(self):
+        user = self.get_object()
+        start_date = self.request.query_params.get('start_date')
+        end_date = self.request.query_params.get('end_date')
+        queryset = User.objects.filter(
+            viewee__viewer=user
+        )
+        sub_queryset = ProfileView.objects.filter(viewer=user)
+        view_count_query = Q()
+
+        if start_date:
+            start_date = DateService.from_timestamp(start_date)
+            queryset = queryset.filter(viewee__created_at__gte=start_date)
+            sub_queryset = sub_queryset.filter(created_at__gte=start_date)
+            view_count_query = view_count_query & Q(viewee__created_at__gte=start_date)
+
+        if end_date:
+            end_date = DateService.from_timestamp(end_date)
+            queryset = queryset.filter(viewee__created_at__lte=end_date)
+            sub_queryset = sub_queryset.filter(created_at__lte=end_date)
+            view_count_query = view_count_query & Q(viewee__created_at__lte=end_date)
+
+        queryset = queryset.annotate(
+            view_count=Count(
+                'viewee',
+                filter=view_count_query
+            ),
+            last_viewed=Subquery(
+                sub_queryset.filter(
+                    viewee=OuterRef('id')
+                ).order_by('-created_at').values('created_at')[:1]
+            )
+        ).filter(
+            view_count__gt=0
+        ).distinct()
+
+        return queryset.order_by('-last_viewed')
+
     def is_create_api(self):
         return self.action == 'create'
 
@@ -236,4 +338,14 @@ class UserAPIViewSet(ModelViewSet):
     @extend_user_sentiment_schema
     @action(detail=True, methods=['get'], url_path='sentiment-to')
     def get_user_sentiments_to(self, request, *args, **kwargs):
+        return super(UserAPIViewSet, self).list(request, *args, **kwargs)
+
+    @extend_profile_views_schema
+    @action(detail=True, methods=['get'], url_path='profile-visited-by')
+    def get_profile_visited_by(self, request, *args, **kwargs):
+        return super(UserAPIViewSet, self).list(request, *args, **kwargs)
+
+    @extend_profile_views_schema
+    @action(detail=True, methods=['get'], url_path='profile-visited-to')
+    def get_profile_visited_to(self, request, *args, **kwargs):
         return super(UserAPIViewSet, self).list(request, *args, **kwargs)
