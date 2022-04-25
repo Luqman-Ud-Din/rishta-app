@@ -4,7 +4,7 @@ from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
-from backend.users.models import User, Sentiment
+from backend.users.models import User, Sentiment, ProfileView
 
 basic_user_fields = [
     'id', 'username', 'email', 'avatar',
@@ -12,16 +12,18 @@ basic_user_fields = [
     'gender', 'religion', 'blood_group'
 ]
 
+basic_user_extra_kwargs = {
+    'password': {'write_only': True},
+    'id': {'read_only': True},
+    'avatar': {'read_only': True},
+}
+
 
 class UserBasicSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = basic_user_fields
-        extra_kwargs = {
-            'password': {'write_only': True},
-            'id': {'read_only': True},
-            'avatar': {'read_only': True},
-        }
+        extra_kwargs = basic_user_extra_kwargs
 
     @transaction.atomic
     def create(self, validated_data):
@@ -58,6 +60,8 @@ class UserDetailSerializer(UserBasicSerializer):
 
     profile_likes = serializers.SerializerMethodField()
     profile_dislikes = serializers.SerializerMethodField()
+    profile_viewers = serializers.SerializerMethodField()
+    profile_views = serializers.SerializerMethodField()
 
     @extend_schema_field(OpenApiTypes.INT)
     def get_profile_likes(self, obj):
@@ -67,22 +71,46 @@ class UserDetailSerializer(UserBasicSerializer):
     def get_profile_dislikes(self, obj):
         return obj.sentiments_to.filter(sentiment=Sentiment.SentimentStatus.DISLIKE).count()
 
+    @extend_schema_field(OpenApiTypes.INT)
+    def get_profile_viewers(self, obj):
+        # TODO: obj.viewee.all().distinct('viewer').count()
+        # TODO: after migrating to PostgreSQL
+        return User.objects.filter(viewer__viewee=obj).distinct().count()
+
+    @extend_schema_field(OpenApiTypes.INT)
+    def get_profile_views(self, obj):
+        return obj.viewee.all().count()
+
 
 class UserBasicSentimentSerializer(UserBasicSerializer):
     class Meta:
         model = User
         fields = basic_user_fields + ['sentiment']
-        extra_kwargs = {
-            'password': {'write_only': True},
-            'id': {'read_only': True},
-            'avatar': {'read_only': True},
-        }
+        extra_kwargs = basic_user_extra_kwargs
 
     sentiment = serializers.SerializerMethodField()
 
     @extend_schema_field(OpenApiTypes.STR)
     def get_sentiment(self, obj):
         return getattr(obj, 'sentiment', None)
+
+
+class UserBasicProfileViewSerializer(UserBasicSerializer):
+    class Meta:
+        model = User
+        fields = basic_user_fields + ['view_count', 'last_viewed']
+        extra_kwargs = basic_user_extra_kwargs
+
+    view_count = serializers.SerializerMethodField()
+    last_viewed = serializers.SerializerMethodField()
+
+    @extend_schema_field(OpenApiTypes.INT)
+    def get_view_count(self, obj):
+        return getattr(obj, 'view_count', None)
+
+    @extend_schema_field(OpenApiTypes.STR)
+    def get_last_viewed(self, obj):
+        return getattr(obj, 'last_viewed', None)
 
 
 class SentimentSerializer(serializers.ModelSerializer):
@@ -103,3 +131,12 @@ class SentimentSerializer(serializers.ModelSerializer):
         instance.sentiment = validated_data['sentiment']
         instance.save()
         return instance
+
+
+class ProfileViewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProfileView
+        fields = '__all__'
+        extra_kwargs = {
+            'created_at': {'read_only': True},
+        }
