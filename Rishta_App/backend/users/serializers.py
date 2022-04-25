@@ -106,7 +106,6 @@ class SentimentSerializer(serializers.ModelSerializer):
 
 
 class ProfileViewSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = ProfileView
         fields = '__all__'
