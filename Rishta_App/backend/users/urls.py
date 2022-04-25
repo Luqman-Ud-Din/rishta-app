@@ -11,7 +11,7 @@ APP_BASE_URL = r'users'
 router = DefaultRouter()
 router.register(APP_BASE_URL, UserAPIViewSet, basename='user')
 router.register('sentiments', SentimentAPIViewSet, basename='user_sentiment')
-router.register('viewprofile', ProfileViewAPIViewSet, basename='view_profile')
+router.register('profile-views', ProfileViewAPIViewSet, basename='profile_views')
 
 urlpatterns = router.urls + [
     re_path(
