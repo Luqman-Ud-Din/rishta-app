@@ -33,6 +33,12 @@ class User(AbstractBaseUser, PermissionsMixin):
         DIVORCED = 'D', _('Divorced')
         OTHER = 'O', _('Other')
 
+    class LookingForStatus(models.TextChoices):
+        SINGLE = 'S', _('Single')
+        MARRIED = 'M', _('Married')
+        DIVORCED = 'D', _('Divorced')
+        NO_PREFERENCE = 'N', _('No Preference')
+
     class BloodGroup(models.TextChoices):
         AB_NEGATIVE = 'AB-', _('AB-')
         AB_POSITIVE = 'AB+', _('AB+')
@@ -197,6 +203,12 @@ class User(AbstractBaseUser, PermissionsMixin):
         max_length=1,
         choices=MaritalStatus.choices,
         default=MaritalStatus.SINGLE,
+    )
+    looking_for = models.CharField(
+        _('looking for'),
+        max_length=1,
+        choices=LookingForStatus.choices,
+        default=LookingForStatus.NO_PREFERENCE,
     )
     blood_group = models.CharField(
         _('blood group'),
