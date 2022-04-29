@@ -1,12 +1,12 @@
+from ckeditor.widgets import CKEditorWidget
 from django import forms
 from django.contrib import admin
-from tinymce.widgets import TinyMCE
 
 from backend.events.models import Event, UserEvent
 
 
 class EventAdminForm(forms.ModelForm):
-    detail = forms.CharField(widget=TinyMCE(attrs={'cols': 80, 'rows': 30}))
+    detail = forms.CharField(widget=CKEditorWidget())
 
     class Meta:
         model = Event
