@@ -6,9 +6,10 @@ from django.template.loader import render_to_string
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 from drf_spectacular.utils import extend_schema, OpenApiParameter
-from rest_framework import status
+from rest_framework import status, filters
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
+from rest_framework.pagination import CursorPagination
 from rest_framework.permissions import IsAuthenticated, AllowAny, BasePermission
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
@@ -79,10 +80,29 @@ extend_profile_views_schema = extend_schema(
     ],
 )
 
+GET_USER_EVENTS_ACTION = 'get_events'
+
 
 class UserAPIViewSet(ModelViewSet):
     permission_classes = (IsAuthenticated,)
     serializer_class = UserDetailSerializer
+    filter_backends = (filters.OrderingFilter,)
+    ordering_fields = ('created_at',)
+    ordering = '-created_at'
+
+    @property
+    def paginator(self):
+        """
+        The paginator instance associated with the view, or `None`.
+        """
+        if not hasattr(self, '_paginator'):
+            if self.pagination_class is None:
+                self._paginator = None
+            elif self.action != GET_USER_EVENTS_ACTION:
+                self._paginator = CursorPagination()
+            else:
+                self._paginator = self.pagination_class()
+        return self._paginator
 
     def get_object(self):
         """
@@ -113,7 +133,7 @@ class UserAPIViewSet(ModelViewSet):
         return obj
 
     def get_serializer_class(self):
-        if self.action == 'get_events':
+        if self.action == GET_USER_EVENTS_ACTION:
             return EventDetailSerializer
         elif self.action == 'list':
             return UserBasicSerializer
@@ -129,7 +149,7 @@ class UserAPIViewSet(ModelViewSet):
             return self.get_user_sentiments_from_queryset()
         elif self.action == 'get_user_sentiments_to':
             return self.get_user_sentiments_to_queryset()
-        elif self.action == 'get_events':
+        elif self.action == GET_USER_EVENTS_ACTION:
             return self.get_user_events_queryset()
         elif self.action == 'get_profile_visited_by':
             return self.get_profile_visited_by_queryset()
@@ -201,6 +221,33 @@ class UserAPIViewSet(ModelViewSet):
             queryset = queryset.filter(user_events__interest_status=interest)
         else:
             queryset = queryset.exclude(user_events__interest_status=UserEvent.InterestStatus.IGNORE)
+
+        queryset = queryset.annotate(
+            attend_count=Count(
+                'user_events',
+                filter=Q(user_events__interest_status=UserEvent.InterestStatus.ATTEND)
+            ),
+            not_attend_count=Count(
+                'user_events',
+                filter=Q(user_events__interest_status=UserEvent.InterestStatus.NOT_ATTEND)
+            ),
+            ignore_count=Count(
+                'user_events',
+                filter=Q(user_events__interest_status=UserEvent.InterestStatus.IGNORE)
+            ),
+            interest_status=Subquery(
+                UserEvent.objects.filter(
+                    event=OuterRef('id'),
+                    user=self.request.user
+                ).values('interest_status')[:1]
+            ),
+            user_event=Subquery(
+                UserEvent.objects.filter(
+                    event=OuterRef('id'),
+                    user=self.request.user
+                ).values('id')[:1]
+            )
+        )
 
         return queryset.order_by('-end_date')
 
