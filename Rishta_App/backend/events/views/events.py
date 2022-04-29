@@ -1,8 +1,10 @@
 from django.contrib.auth import get_user_model
 from django.db.models import Count, Q, OuterRef, Subquery, Case, When, Value, CharField, F
 from drf_spectacular.utils import extend_schema, OpenApiParameter
+from rest_framework import filters
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
+from rest_framework.pagination import CursorPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import ModelViewSet
 
@@ -27,10 +29,15 @@ extend_events_schema = extend_schema(
     parameters=[event_status_query_parameter],
 )
 
+GET_USERS_ACTION = 'get_users'
+
 
 class EventsAPIViewSet(ModelViewSet):
     permission_classes = (IsAuthenticated,)
     serializer_class = EventDetailSerializer
+    filter_backends = (filters.OrderingFilter,)
+    ordering_fields = ('created_at',)
+    ordering = '-created_at'
 
     def get_object(self):
         """
@@ -61,13 +68,27 @@ class EventsAPIViewSet(ModelViewSet):
         return obj
 
     def get_serializer_class(self):
-        if self.action == 'get_users':
+        if self.action == GET_USERS_ACTION:
             return UserBasicSerializer
 
         return super(EventsAPIViewSet, self).get_serializer_class()
 
+    @property
+    def paginator(self):
+        """
+        The paginator instance associated with the view, or `None`.
+        """
+        if not hasattr(self, '_paginator'):
+            if self.pagination_class is None:
+                self._paginator = None
+            elif self.action != GET_USERS_ACTION:
+                self._paginator = CursorPagination()
+            else:
+                self._paginator = self.pagination_class()
+        return self._paginator
+
     def get_queryset(self):
-        if self.action == 'get_users':
+        if self.action == GET_USERS_ACTION:
             return self.get_event_users_queryset()
 
         return self.get_events_queryset()
@@ -101,6 +122,12 @@ class EventsAPIViewSet(ModelViewSet):
                     event=OuterRef('id'),
                     user=self.request.user
                 ).values('interest_status')[:1]
+            ),
+            user_event=Subquery(
+                UserEvent.objects.filter(
+                    event=OuterRef('id'),
+                    user=self.request.user
+                ).values('id')[:1]
             )
         ).annotate(
             interest_status=Case(
@@ -157,3 +184,7 @@ class UserEventsAPIViewSet(ModelViewSet):
     permission_classes = (IsAuthenticated,)
     serializer_class = UserEventSerializer
     queryset = UserEvent.objects.all()
+    pagination_class = CursorPagination
+    filter_backends = (filters.OrderingFilter,)
+    ordering_fields = ('created_at',)
+    ordering = '-created_at'
