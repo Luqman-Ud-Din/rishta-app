@@ -202,6 +202,33 @@ class UserAPIViewSet(ModelViewSet):
         else:
             queryset = queryset.exclude(user_events__interest_status=UserEvent.InterestStatus.IGNORE)
 
+        queryset = queryset.annotate(
+            attend_count=Count(
+                'user_events',
+                filter=Q(user_events__interest_status=UserEvent.InterestStatus.ATTEND)
+            ),
+            not_attend_count=Count(
+                'user_events',
+                filter=Q(user_events__interest_status=UserEvent.InterestStatus.NOT_ATTEND)
+            ),
+            ignore_count=Count(
+                'user_events',
+                filter=Q(user_events__interest_status=UserEvent.InterestStatus.IGNORE)
+            ),
+            interest_status=Subquery(
+                UserEvent.objects.filter(
+                    event=OuterRef('id'),
+                    user=self.request.user
+                ).values('interest_status')[:1]
+            ),
+            user_event=Subquery(
+                UserEvent.objects.filter(
+                    event=OuterRef('id'),
+                    user=self.request.user
+                ).values('id')[:1]
+            )
+        )
+
         return queryset.order_by('-end_date')
 
     def get_profile_visited_by_queryset(self):
