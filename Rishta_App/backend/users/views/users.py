@@ -188,7 +188,9 @@ class UserAPIViewSet(ModelViewSet):
     def get_user_events_queryset(self):
         status = self.request.query_params.get('status')
         interest = self.request.query_params.get('interest')
-        queryset = Event.objects.filter(user_events__user=self.get_object())
+        queryset = Event.objects.filter(
+            user_events__user=self.get_object()
+        )
 
         if status and status.lower() == EventStatus.PAST.value:
             queryset = queryset.filter_past_events()
@@ -197,6 +199,8 @@ class UserAPIViewSet(ModelViewSet):
 
         if interest:
             queryset = queryset.filter(user_events__interest_status=interest)
+        else:
+            queryset = queryset.exclude(user_events__interest_status=UserEvent.InterestStatus.IGNORE)
 
         return queryset.order_by('-end_date')
 
