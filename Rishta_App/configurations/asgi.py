@@ -12,11 +12,7 @@ import os
 from common_settings import env
 from django.core.asgi import get_asgi_application
 
-if env('ENVIRONMENT') == 'PROD':
-    configurations = 'configurations.prod_settings'
-else:
-    configurations = 'configurations.dev_settings'
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', configurations)
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', env('CONFIGURATIONS'))
 
 application = get_asgi_application()
