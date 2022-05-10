@@ -260,6 +260,14 @@ class User(AbstractBaseUser, PermissionsMixin):
     about_dislikes = models.CharField(_('about dislikes'), max_length=1024, null=True, blank=True)
     about_lifestyle = models.CharField(_('about lifestyle'), max_length=1024, null=True, blank=True)
 
+    payment_plan = models.ForeignKey(
+        'payments.PaymentPlan',
+        on_delete=models.PROTECT,
+        related_name='subscribers',
+        null=True, blank=True
+    )
+    payment_plan_expires_at = models.DateTimeField(_('payment plan expires at'), default=timezone.now)
+
     created_at = models.DateTimeField(_('created at'), default=timezone.now)
     updated_at = models.DateTimeField(_('updated at'), auto_now=True)
 
