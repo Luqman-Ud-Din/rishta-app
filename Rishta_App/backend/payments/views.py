@@ -149,7 +149,9 @@ class StripePaymentEventCallbackAPIView(APIView):
 
         if user and event_type == PaymentEvent.PaymentEventType.PAYMENT_INTENT_SUCCEEDED:
             user.payment_plan = payment_plan
-            user.payment_plan_expires_at = timezone.now() + timedelta(days=payment_plan.duration)
+            now = timezone.now()
+            user.payment_plan_expires_at = now + timedelta(days=payment_plan.duration)
+            user.payment_plan_subscribed_at = now
             user.save()
 
         return Response(status=status.HTTP_200_OK)

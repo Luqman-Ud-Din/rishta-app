@@ -62,7 +62,8 @@ class UserDetailSerializer(UserBasicSerializer):
     profile_dislikes = serializers.SerializerMethodField()
     profile_viewers = serializers.SerializerMethodField()
     profile_views = serializers.SerializerMethodField()
-    payment_plan_meta = serializers.SerializerMethodField()
+    payment_plan_title = serializers.ReadOnlyField()
+    is_payment_plan_expired = serializers.ReadOnlyField()
 
     @extend_schema_field(OpenApiTypes.INT)
     def get_profile_likes(self, obj):
@@ -81,16 +82,6 @@ class UserDetailSerializer(UserBasicSerializer):
     @extend_schema_field(OpenApiTypes.INT)
     def get_profile_views(self, obj):
         return obj.viewee.all().count()
-
-    @extend_schema_field(OpenApiTypes.OBJECT)
-    def get_payment_plan_meta(self, obj):
-        if not obj.payment_plan:
-            return None
-
-        return {
-            'title': obj.payment_plan.title,
-            'id': obj.id,
-        }
 
 
 class UserBasicSentimentSerializer(UserBasicSerializer):
