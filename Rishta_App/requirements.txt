@@ -1,5 +1,6 @@
 django==4.0.2
 markdown==3.3.6
+django-environ==0.8.1
 django-filter==21.1
 djangorestframework==3.13.1
 djangorestframework-simplejwt==5.0.0
@@ -7,5 +8,5 @@ Pillow==9.0.1
 drf-spectacular==0.21.2
 drf-spectacular-sidecar==2022.3.7
 django-ckeditor==6.4.0
-pyenchant==3.2.2
 stripe==2.76.0
+psycopg2-binary==2.9.3
