@@ -20,6 +20,7 @@ from django.urls import path, include
 
 from backend.authentication.urls import urlpatterns as authentication_urls
 from backend.events.urls import urlpatterns as event_urls
+from backend.payments.urls import urlpatterns as payment_urls
 from backend.swagger.urls import urlpatterns as swagger_urls
 from backend.users.urls import urlpatterns as user_urls
 
@@ -30,5 +31,6 @@ urlpatterns += [
     path('tinymce/', include('tinymce.urls')),
     path('api/', include(authentication_urls)),
     path('api/', include(user_urls)),
-    path('api/', include(event_urls))
+    path('api/', include(event_urls)),
+    path('api/', include(payment_urls))
 ]

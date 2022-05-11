@@ -57,6 +57,7 @@ LOCAL_APPS = [
     'backend.authentication',
     'backend.events',
     'backend.swagger',
+    'backend.payments',
 ]
 
 INSTALLED_APPS = DJANGO_DEFAULT_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -230,3 +231,5 @@ CKEDITOR_CONFIGS = {
         ]),
     }
 }
+
+STRIPE_SECRET_KEY = 'sk_test_51KxRwfCe2X04fekwVk3JSnlJB7xFLhOechTgeNkgABdVEloupSIWnjlXEHnwwLjcoi5HqEJD1JItXwRquKKGz0oq00JmU4jRxk'
