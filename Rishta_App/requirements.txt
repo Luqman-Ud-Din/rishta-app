@@ -8,3 +8,4 @@ drf-spectacular==0.21.2
 drf-spectacular-sidecar==2022.3.7
 django-ckeditor==6.4.0
 pyenchant==3.2.2
+stripe==2.76.0

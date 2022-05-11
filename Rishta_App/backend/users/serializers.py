@@ -62,6 +62,8 @@ class UserDetailSerializer(UserBasicSerializer):
     profile_dislikes = serializers.SerializerMethodField()
     profile_viewers = serializers.SerializerMethodField()
     profile_views = serializers.SerializerMethodField()
+    payment_plan_title = serializers.ReadOnlyField()
+    is_payment_plan_expired = serializers.ReadOnlyField()
 
     @extend_schema_field(OpenApiTypes.INT)
     def get_profile_likes(self, obj):

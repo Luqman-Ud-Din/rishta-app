@@ -260,6 +260,15 @@ class User(AbstractBaseUser, PermissionsMixin):
     about_dislikes = models.CharField(_('about dislikes'), max_length=1024, null=True, blank=True)
     about_lifestyle = models.CharField(_('about lifestyle'), max_length=1024, null=True, blank=True)
 
+    payment_plan = models.ForeignKey(
+        'payments.PaymentPlan',
+        on_delete=models.PROTECT,
+        related_name='subscribers',
+        null=True, blank=True
+    )
+    payment_plan_subscribed_at = models.DateTimeField(_('payment plan subscribed at'), default=timezone.now)
+    payment_plan_expires_at = models.DateTimeField(_('payment plan expires at'), default=timezone.now)
+
     created_at = models.DateTimeField(_('created at'), default=timezone.now)
     updated_at = models.DateTimeField(_('updated at'), auto_now=True)
 
@@ -281,6 +290,14 @@ class User(AbstractBaseUser, PermissionsMixin):
     def email_user(self, subject, message, from_email=None, **kwargs):
         """Send an email to this user."""
         send_mail(subject, message, from_email, [self.email], **kwargs)
+
+    @property
+    def is_payment_plan_expired(self):
+        return self.payment_plan_expires_at <= timezone.now()
+
+    @property
+    def payment_plan_title(self):
+        return self.payment_plan.title if self.payment_plan else None
 
 
 class Sentiment(models.Model):
