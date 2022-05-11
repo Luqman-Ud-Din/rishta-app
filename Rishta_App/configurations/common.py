@@ -10,15 +10,11 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.0/ref/settings/
 """
 
-import environ
 import os
 from datetime import timedelta
 from pathlib import Path
 
-import enchant
-
-enchant.dict_exists('en')
-
+import environ
 
 # Initialise environment variables
 env = environ.Env()
@@ -30,7 +26,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
 
-SECRET_KEY=env('SECRET_KEY')
+ALLOWED_HOSTS = ['*']
+SECRET_KEY = env('SECRET_KEY') or 'django-insecure-c6o(fx%)2i_mkztz-6v+^pq06hs7_iufbpy=eox+#3+s7ca6@e'
 
 # Application definition
 DJANGO_DEFAULT_APPS = [
@@ -94,6 +91,17 @@ WSGI_APPLICATION = 'configurations.wsgi.application'
 
 AUTH_USER_MODEL = 'users.User'
 
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': env('DB_NAME'),
+        'USER': env('DB_USER_NAME'),
+        'PASSWORD': env('DB_PASSWORD'),
+        'HOST': env('DB_HOST'),
+        'PORT': env('DB_PORT'),
+    }
+}
+
 # Password validation
 # https://docs.djangoproject.com/en/4.0/ref/settings/#auth-password-validators
 
@@ -147,11 +155,11 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-EMAIL_USE_TLS = True
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_HOST_USER = 'rishta.app.manager@gmail.com'
-EMAIL_HOST_PASSWORD = 'gjfctcfcdhouujih'
-EMAIL_PORT = 587
+EMAIL_USE_TLS = env.bool('EMAIL_USE_TLS', True)
+EMAIL_HOST = env('EMAIL_HOST')
+EMAIL_HOST_USER = env('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
+EMAIL_PORT = env('EMAIL_PORT')
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=2),
@@ -232,4 +240,4 @@ CKEDITOR_CONFIGS = {
     }
 }
 
-STRIPE_SECRET_KEY = 'sk_test_51KxRwfCe2X04fekwVk3JSnlJB7xFLhOechTgeNkgABdVEloupSIWnjlXEHnwwLjcoi5HqEJD1JItXwRquKKGz0oq00JmU4jRxk'
+STRIPE_SECRET_KEY = env('STRIPE_SECRET_KEY')
