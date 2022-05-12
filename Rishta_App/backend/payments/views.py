@@ -40,8 +40,11 @@ class StripeTestPaymentAPIView(APIView):
             payment_method_types=['card'],
             receipt_email='test@example.com'
         )
-
-        return Response(status=status.HTTP_200_OK, data=payment_intent)
+        data = {
+            **payment_intent,
+            'public_key': settings.STRIPE_PUBLIC_KEY
+        }
+        return Response(status=status.HTTP_200_OK, data=data)
 
 
 class StripeConfirmPaymentIntentAPIView(APIView):
@@ -107,7 +110,10 @@ class StripeCreatePaymentIntentAPIView(APIView):
             )
 
             status_code = status.HTTP_200_OK
-            data = payment_intent
+            data = {
+                **payment_intent,
+                'public_key': settings.STRIPE_PUBLIC_KEY
+            }
 
         except PaymentPlan.DoesNotExist:
             status_code = status.HTTP_400_BAD_REQUEST
