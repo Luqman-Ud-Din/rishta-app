@@ -28,7 +28,6 @@ urlpatterns = static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 urlpatterns += [
     path('admin/', admin.site.urls),
     path('swagger/', include(swagger_urls)),
-    path('tinymce/', include('tinymce.urls')),
     path('api/', include(authentication_urls)),
     path('api/', include(user_urls)),
     path('api/', include(event_urls)),
