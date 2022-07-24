@@ -21,6 +21,7 @@ class CreatePaymentIntentResponseSerializer(serializers.Serializer):
     id = serializers.CharField()
     object = serializers.CharField()
     client_secret = serializers.CharField()
+    public_key = serializers.CharField()
     amount = serializers.IntegerField()
     currency = serializers.CharField()
 
