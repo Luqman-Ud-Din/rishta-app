@@ -104,10 +104,10 @@ class UserBasicSentimentSerializer(UserProfileSentimentSerializer, UserBasicSeri
         return getattr(obj, 'sentiment', None)
 
 
-class UserBasicProfileViewSerializer(UserBasicSerializer):
+class UserBasicProfileViewSerializer(UserProfileSentimentSerializer, UserBasicSerializer):
     class Meta:
         model = User
-        fields = basic_user_fields + ['view_count', 'last_viewed']
+        fields = basic_user_fields + ['view_count', 'last_viewed', 'profile_likes', 'profile_dislikes']
         extra_kwargs = basic_user_extra_kwargs
 
     view_count = serializers.SerializerMethodField()
