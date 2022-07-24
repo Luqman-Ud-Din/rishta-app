@@ -208,21 +208,20 @@ class UserAPIViewSet(ModelViewSet):
     def get_user_events_queryset(self):
         status = self.request.query_params.get('status')
         interest = self.request.query_params.get('interest')
-        queryset = Event.objects.filter(
-            user_events__user=self.get_object()
-        )
 
+        queryset = Event.objects
         if status and status.lower() == EventStatus.PAST.value:
             queryset = queryset.filter_past_events()
         elif status and status.lower() == EventStatus.PENDING.value:
             queryset = queryset.filter_pending_events()
 
+        query = Q(user_events__user=self.get_object())
         if interest:
-            queryset = queryset.filter(user_events__interest_status=interest)
+            query = query & Q(user_events__interest_status=interest)
         else:
-            queryset = queryset.exclude(user_events__interest_status=UserEvent.InterestStatus.IGNORE)
+            query = query & ~Q(user_events__interest_status=UserEvent.InterestStatus.IGNORE)
 
-        queryset = queryset.annotate(
+        queryset = queryset.filter(query).annotate(
             attend_count=Count(
                 'user_events',
                 filter=Q(user_events__interest_status=UserEvent.InterestStatus.ATTEND)
