@@ -19,6 +19,23 @@ basic_user_extra_kwargs = {
 }
 
 
+class UserProfileSentimentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['profile_likes', 'profile_dislikes']
+
+    profile_likes = serializers.SerializerMethodField()
+    profile_dislikes = serializers.SerializerMethodField()
+
+    @extend_schema_field(OpenApiTypes.INT)
+    def get_profile_likes(self, obj):
+        return obj.sentiments_to.filter(sentiment=Sentiment.SentimentStatus.LIKE).count()
+
+    @extend_schema_field(OpenApiTypes.INT)
+    def get_profile_dislikes(self, obj):
+        return obj.sentiments_to.filter(sentiment=Sentiment.SentimentStatus.DISLIKE).count()
+
+
 class UserBasicSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -44,7 +61,7 @@ class UserBasicSerializer(serializers.ModelSerializer):
         return super(UserBasicSerializer, self).update(instance, validated_data)
 
 
-class UserDetailSerializer(UserBasicSerializer):
+class UserDetailSerializer(UserProfileSentimentSerializer, UserBasicSerializer):
     class Meta:
         model = User
         exclude = [
@@ -58,20 +75,10 @@ class UserDetailSerializer(UserBasicSerializer):
             'is_active': {'write_only': True, 'required': False}
         }
 
-    profile_likes = serializers.SerializerMethodField()
-    profile_dislikes = serializers.SerializerMethodField()
     profile_viewers = serializers.SerializerMethodField()
     profile_views = serializers.SerializerMethodField()
     payment_plan_title = serializers.ReadOnlyField()
     is_payment_plan_expired = serializers.ReadOnlyField()
-
-    @extend_schema_field(OpenApiTypes.INT)
-    def get_profile_likes(self, obj):
-        return obj.sentiments_to.filter(sentiment=Sentiment.SentimentStatus.LIKE).count()
-
-    @extend_schema_field(OpenApiTypes.INT)
-    def get_profile_dislikes(self, obj):
-        return obj.sentiments_to.filter(sentiment=Sentiment.SentimentStatus.DISLIKE).count()
 
     @extend_schema_field(OpenApiTypes.INT)
     def get_profile_viewers(self, obj):
@@ -84,10 +91,10 @@ class UserDetailSerializer(UserBasicSerializer):
         return obj.viewee.all().count()
 
 
-class UserBasicSentimentSerializer(UserBasicSerializer):
+class UserBasicSentimentSerializer(UserProfileSentimentSerializer, UserBasicSerializer):
     class Meta:
         model = User
-        fields = basic_user_fields + ['sentiment']
+        fields = basic_user_fields + ['sentiment', 'profile_likes', 'profile_dislikes']
         extra_kwargs = basic_user_extra_kwargs
 
     sentiment = serializers.SerializerMethodField()
