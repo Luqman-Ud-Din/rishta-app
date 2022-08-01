@@ -1,3 +1,6 @@
+import face_recognition
+import numpy as np
+from PIL import Image
 from django.contrib.auth.hashers import make_password
 from django.db import transaction
 from drf_spectacular.types import OpenApiTypes
@@ -41,6 +44,21 @@ class UserBasicSerializer(serializers.ModelSerializer):
         model = User
         fields = basic_user_fields
         extra_kwargs = basic_user_extra_kwargs
+
+    def validate_avatar(self, value):
+        image = Image.open(value.file)
+        image = np.array(image.convert('RGB'))
+        face_locations = face_recognition.face_locations(image)
+
+        if len(face_locations) > 1:
+            raise serializers.ValidationError('More than 1 face detected in the uploaded image')
+
+        if len(face_locations) < 1:
+            raise serializers.ValidationError('No face detected in the uploaded image')
+
+        value.file.seek(0)
+
+        return value
 
     @transaction.atomic
     def create(self, validated_data):
