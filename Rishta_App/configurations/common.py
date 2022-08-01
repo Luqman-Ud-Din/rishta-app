@@ -44,6 +44,7 @@ THIRD_PARTY_APPS = [
     'drf_spectacular',
     'drf_spectacular_sidecar',
     'rest_framework_simplejwt',
+    'generic_relations',
     'ckeditor',
 ]
 
@@ -54,6 +55,7 @@ LOCAL_APPS = [
     'backend.events',
     'backend.swagger',
     'backend.payments',
+    'backend.notifications',
 ]
 
 INSTALLED_APPS = DJANGO_DEFAULT_APPS + THIRD_PARTY_APPS + LOCAL_APPS

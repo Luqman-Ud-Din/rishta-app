@@ -1,11 +1,13 @@
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.models import PermissionsMixin
 from django.contrib.auth.validators import UnicodeUsernameValidator
+from django.contrib.contenttypes.fields import GenericRelation
 from django.core.mail import send_mail
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
+from backend.notifications.models import Notification
 from backend.users.managers import CustomUserManager
 
 
@@ -317,6 +319,9 @@ class Sentiment(models.Model):
         choices=SentimentStatus.choices,
         default=SentimentStatus.NEUTRAL,
     )
+
+    notifications = GenericRelation(Notification, related_query_name='sentiments')
+
     created_at = models.DateTimeField(_('created at'), default=timezone.now)
     updated_at = models.DateTimeField(_('updated at'), auto_now=True)
 
@@ -324,4 +329,7 @@ class Sentiment(models.Model):
 class ProfileView(models.Model):
     viewer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='viewer')
     viewee = models.ForeignKey(User, on_delete=models.CASCADE, related_name='viewee')
+
+    notifications = GenericRelation(Notification, related_query_name='profile_views')
+
     created_at = models.DateTimeField(_('created at'), default=timezone.now)
