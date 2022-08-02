@@ -1,3 +1,6 @@
+from datetime import timedelta
+
+from django.conf import settings
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.models import PermissionsMixin
 from django.contrib.auth.validators import UnicodeUsernameValidator
@@ -17,6 +20,10 @@ def current_date():
 
 def current_time():
     return timezone.now().time()
+
+
+def get_user_trial_period():
+    return timezone.now() + timedelta(days=settings.USER_TRIAL_PERIOD)
 
 
 class User(AbstractBaseUser, PermissionsMixin):
@@ -269,7 +276,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         null=True, blank=True
     )
     payment_plan_subscribed_at = models.DateTimeField(_('payment plan subscribed at'), default=timezone.now)
-    payment_plan_expires_at = models.DateTimeField(_('payment plan expires at'), default=timezone.now)
+    payment_plan_expires_at = models.DateTimeField(_('payment plan expires at'), default=get_user_trial_period)
 
     created_at = models.DateTimeField(_('created at'), default=timezone.now)
     updated_at = models.DateTimeField(_('updated at'), auto_now=True)
