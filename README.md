@@ -87,6 +87,26 @@ API will be available at `http://127.0.0.1:8000/`.
 - `/swagger/` — OpenAPI/Swagger UI
 - `/api/` — Authentication, users, events, payments, and notifications endpoints
 
+## Payments (Stripe)
+
+The project includes Stripe-based subscription/payment support through the `backend/payments` app.
+
+Key capabilities:
+
+- list active payment plans
+- create Stripe payment intents for a selected plan
+- confirm payment intents
+- receive Stripe event callbacks and store payment events
+- update user subscription plan and expiry after successful payment
+
+Payment endpoints:
+
+- `/api/payments/payment-plans/`
+- `/api/payments/create-payment-intent/`
+- `/api/payments/confirm-payment-intent/`
+- `/api/payments/payment-events-callback/`
+- `/api/payments/test-payment/`
+
 ## Testing
 
 Run tests from `Rishta_App/`:
